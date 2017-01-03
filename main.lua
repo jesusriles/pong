@@ -39,7 +39,6 @@ end
 -- function that draw the ball
 function createBall()
 	local ballName = display.newCircle(halfW, halfH, 10)
-	ballName:setFillColor(.3, .2, .5)
 	return ballName
 end
 
@@ -103,7 +102,6 @@ end
 local function onCollisionBird(event)
 	print("bird Collision")
 end
-
 
 
 -- create wall objects
