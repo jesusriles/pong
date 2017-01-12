@@ -68,7 +68,9 @@ score:setFillColor(1, 1, 1)
 
 -- collision to ball
 local function onCollisionBall(event)
-	score.text = score.text + 1
+	if (event.phase == "ended") then
+		score.text = score.text + 1
+	end
 end
 
 
@@ -80,6 +82,7 @@ local bottomWall = display.newRect( halfW, screenH, display.contentWidth + 60, 1
 bottomWall:setFillColor(0,0,0)
 
 local leftWall = display.newRect( -40, halfH, 10, display.contentHeight )
+
 leftWall:setFillColor(.5,.5,.5)
 
 local rightWall = display.newRect( display.contentWidth + 40, halfH, 10, display.contentHeight )
@@ -106,7 +109,7 @@ function leftPad:touch( event )
 end
 
 
---ball:addEventListener("collision", onCollisionBall)
+ball:addEventListener("collision", onCollisionBall)
 leftPad:addEventListener( "touch", leftPad )
 Runtime:addEventListener( "enterFrame", moveRightPad )
 
