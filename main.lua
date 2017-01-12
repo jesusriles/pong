@@ -1,25 +1,16 @@
--- load libraries
 local physics = require("physics")
 physics.start()
 physics.setGravity(0, 0)
 
-
 -- create background
-local background = display.newImage("background.jpg")
-background.x = display.contentCenterX
-background.y = display.contentCenterY
-background.xScale = .70
-background.yScale = .25
+display.setDefault( "background", 0, 0, 0 )
 
--- variables that get information about the screen
+
+-- useful variables
 local screenW = display.contentWidth
 local screenH = display.contentHeight
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
-
-
--- kind of global variables
-local speed = 9
 
 
 -- function that draw the pad
@@ -43,16 +34,11 @@ function createBall()
 end
 
 
--- function that move the pad up
-function moveLeftPadUp(object)
-	object.y = object.y - speed
-end
-
-
--- function that move the pad down
-function moveLeftPadDown(object)
-	object.y = object.y + speed
-end
+-- draw ball
+local ball = createBall()
+ball:setFillColor(180/255, 130/255, 195/255)
+physics.addBody(ball, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
+ball:applyForce(200, 50)
 
 
 -- draw pads
@@ -63,44 +49,26 @@ physics.addBody(leftPad, "static", {density = 1.0, friction = 0, bounce = 1, isS
 local rightPad = createPads(screenW, halfH)
 rightPad:setFillColor(.2, .5, .6)
 physics.addBody(rightPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
---transition.to( rightPad, { time=2000, y=, iterations=2, delta=true} )
 
 
--- draw ball
-local ball = createBall()
-ball:setFillColor(0/255, 25/255, 51/255)
-physics.addBody(ball, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
-ball.isBullet = false
-ball:applyForce(200, 50)
-
-
--- use bird as animation
-local birdSpriteSheet = graphics.newImageSheet("robin.png", {width=240, height=314, numFrames=22})
-local birdSprite = display.newSprite(birdSpriteSheet, {name="birdFlying", start=1, count=22, time=1000})
-birdSprite.x = halfW-30
-birdSprite.y = halfH-30
-birdSprite.xScale = .4
-birdSprite.yScale = .4
-birdSprite:play()
-
-physics.addBody(birdSprite, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
-birdSprite.isBullet = false
+-- function that move the right pad
+function moveRightPad( object )
+	if (ball == nil) then
+		print "WARNING: function: moveRightPad, ball == nil"
+		return 0
+	end
+	rightPad.y = ball.y
+end
 
 
 -- draw scoreboard
 local score = display.newText("0", 470, 30, native.systemFont, 20)
-score:setFillColor(0, 0, 0)
+score:setFillColor(1, 1, 1)
 
 
 -- collision to ball
 local function onCollisionBall(event)
-  print("onCollisionBall")
-  score.text = score.text + 1
-end
-
-
-local function onCollisionBird(event)
-	print("bird Collision")
+	score.text = score.text + 1
 end
 
 
@@ -138,9 +106,10 @@ function leftPad:touch( event )
 end
 
 
-ball:addEventListener("collision", onCollisionBall)
-birdSprite:addEventListener("collision", onCollisionBird)
+--ball:addEventListener("collision", onCollisionBall)
 leftPad:addEventListener( "touch", leftPad )
+Runtime:addEventListener( "enterFrame", moveRightPad )
+
 
 --[[ 
 
@@ -150,6 +119,7 @@ Title		 				Link
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Doing a ball bounce			http://www.ludicroussoftware.com/blog/2011/09/01/corona-physics-forced-bouncing/
 Drag objects 				https://coronalabs.com/blog/2011/09/24/tutorial-how-to-drag-objects/
+Runtime						https://www.youtube.com/watch?v=1hf0HYq5yzc&t=198s
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ]]--
