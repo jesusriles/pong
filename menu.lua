@@ -1,4 +1,3 @@
-
 local composer = require( "composer" )
 
 local scene = composer.newScene()
@@ -8,6 +7,10 @@ local halfH = display.contentHeight * 0.5
 
 local function gotoGame()
 	composer.gotoScene( "game" )
+end
+
+local function gotoEnhancements()
+	composer.gotoScene( "enhancements" )
 end
 
 -- -----------------------------------------------------------------------------------
@@ -20,15 +23,20 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
     display.setDefault(sceneGroup, "background", 0, 0, 0 )
-    display.newText(sceneGroup, "Pong Jesus", halfW, halfH, native.systemFont)
+    local gameName = display.newText(sceneGroup, "Pong", halfW, halfH-50, native.systemFont, 100)
+    gameName:setFillColor( 0.66, 0.99, .52 )
+
+    local highScore = display.newText( sceneGroup, "High score:", display.contentCenterX+190, halfH-140, native.systemFont, 15 )
+    local pointsEarned = display.newText( sceneGroup, "Points earned:", display.contentCenterX+190, halfH-120, native.systemFont, 15 )
 
     local playButton = display.newText( sceneGroup, "Play", display.contentCenterX, 200, native.systemFont, 44 )
     playButton:setFillColor( 0.82, 0.86, 1 )
 
-    local highScoresButton = display.newText( sceneGroup, "High Scores", display.contentCenterX, 810, native.systemFont, 44 )
-    highScoresButton:setFillColor( 0.75, 0.78, 1 )
+    local enhancementsButton = display.newText( sceneGroup, "Enhancements", display.contentCenterX, 250, native.systemFont, 44 )
+    enhancementsButton:setFillColor( 0.75, 0.78, 1 )
 
     playButton:addEventListener( "tap", gotoGame )
+    enhancementsButton:addEventListener( "tap", gotoEnhancements )
 
 end
 
@@ -56,7 +64,7 @@ function scene:hide( event )
 	local phase = event.phase
 
 	if ( phase == "will" ) then
-		-- Code here runs when the scene is on screen (but is about to go off screen)
+		
 
 	elseif ( phase == "did" ) then
 		-- Code here runs immediately after the scene goes entirely off screen
@@ -84,3 +92,4 @@ scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
 
 return scene
+

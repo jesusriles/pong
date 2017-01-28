@@ -8,3 +8,4 @@ math.randomseed( os.time() )
  
 -- Go to the menu screen
 composer.gotoScene( "menu" )
+

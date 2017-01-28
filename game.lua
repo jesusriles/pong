@@ -134,6 +134,11 @@ function scene:create( event )
 	ball.myName = "ball"
 
 	-- draw pads
+	rightPad = createPads(sceneGroup, screenW, halfH)
+	rightPad:setFillColor(.2, .5, .6)
+	physics.addBody(rightPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
+	rightPad.myName = "rightPad"
+
 	leftPad = createPads(sceneGroup, 0, halfH)
 	leftPad:setFillColor(.6, .1, .2)
 	physics.addBody(leftPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
@@ -154,11 +159,6 @@ function scene:create( event )
 	    return true
 
 	end
-
-	rightPad = createPads(sceneGroup, screenW, halfH)
-	rightPad:setFillColor(.2, .5, .6)
-	physics.addBody(rightPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
-	rightPad.myName = "rightPad"
 
 	-- draw scoreboard
 	score = display.newText( sceneGroup, "0", 470, 30, native.systemFont, 20 )
@@ -221,9 +221,6 @@ function scene:hide( event )
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
 
-        -- remove objects
-
-
         -- remove listeners
         ball:removeEventListener( "collision", onCollisionBall ) 
         leftPad:removeEventListener( "touch",  leftPad)
@@ -231,6 +228,9 @@ function scene:hide( event )
         leftPad:removeEventListener( "collision", onCollisionLeftPad )
         rightPad:removeEventListener( "collision", onCollisionRightPad )
         leftWall:removeEventListener( "collision", onCollisionLeftWall )
+
+        -- this removes all the objects
+        composer.removeScene( "game", true )
     end
 end
  
