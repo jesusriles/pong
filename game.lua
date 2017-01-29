@@ -15,7 +15,7 @@ local screenH = display.contentHeight
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
 
-local speed = 15
+local speed = 250
 local score = nil
 local ball = nil
 local leftPad, rightPad = nil, nil
@@ -62,7 +62,7 @@ local function onCollisionBall(event)
 
 	-- update the score
 	if (event.phase == "ended") then
-		score.text = score.text + 1
+		--score.text = score.text + 1
 	end
 
 end
@@ -71,14 +71,16 @@ end
 -- collision left pad
 local function onCollisionLeftPad(event)
 
-	print ("Collision: LeftPad and Ball")
+	if (event.phase == "began") then
+		score.text = score.text + 1
+	end
+
 	if (event.phase == "ended") then
+		-- add speed to the ball	
+		speed = speed + 10
 
-		-- add speed to the ball
-		local ballTempX, ballTempY = ball:getLinearVelocity()
-		print("ballTempX: " .. ballTempX .. ", ballTempY: " .. ballTempY)
-
-		ball:setLinearVelocity( ballTempX+speed, math.random( -350, 350 ) )
+		ball:setLinearVelocity( speed, math.random( -350, 350 ) )
+		print("onCollisionLeftPad> speed: " .. speed)
 	end
 
 end
@@ -87,14 +89,12 @@ end
 -- collision right pad
 local function onCollisionRightPad(event)
 
-	print ("Collision: RightPad and ball")
 	if (event.phase == "ended") then
-
 		-- add speed to the ball
-		local ballTempX, ballTempY = ball:getLinearVelocity()
-		print("ballTempX: " .. ballTempX .. ", ballTempY: " .. ballTempY)
+		speed = speed + 10
 
-		ball:setLinearVelocity( ballTempX+speed, math.random( -350, 350 ) )
+		ball:setLinearVelocity( (speed * -1 ), math.random( -350, 350 ) )
+		print("onCollisionRightPad> speed: " .. speed)
 	end
 
 end
@@ -103,7 +103,6 @@ end
 -- collision left wall
 local function onCollisionLeftWall(event)
 
-	print ("Collision: LeftWall and ball")
 	if (event.phase == "ended") then
 		composer.gotoScene( "menu" )
 	end
@@ -195,6 +194,7 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         score.text = 0
+        speed = 250
 
         physics.setGravity( 0, 0 )
  
