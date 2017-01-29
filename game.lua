@@ -62,7 +62,7 @@ local function onCollisionBall(event)
 
 	-- update the score
 	if (event.phase == "ended") then
-		score.text = score.text + 1
+		--score.text = score.text + 1
 	end
 
 end
@@ -70,6 +70,10 @@ end
 
 -- collision left pad
 local function onCollisionLeftPad(event)
+
+	if (event.phase == "began") then
+		score.text = score.text + 1
+	end
 
 	if (event.phase == "ended") then
 		-- add speed to the ball	
