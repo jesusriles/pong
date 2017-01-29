@@ -28,7 +28,7 @@ function createPads(sceneGroup, x, y)
 	local padOptions = {
 		x = x,
 		y = y,
-		width = 70,
+		width = 15,
 		height = 80,
 		cornerRadius = 5
 	}
@@ -138,26 +138,55 @@ function scene:create( event )
 	physics.addBody(rightPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	rightPad.myName = "rightPad"
 
+	leftPadShadow = display.newRoundedRect( sceneGroup, 0, halfH, 200, 300, 5 )
+	leftPadShadow:setFillColor(0, 0, 0)
+	leftPadShadow:toBack()
+--	physics.addBody(leftPadShadow, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
+	leftPadShadow.myName = "leftPadShadow"
+
 	leftPad = createPads(sceneGroup, 0, halfH)
 	leftPad:setFillColor(.6, .1, .2)
 	physics.addBody(leftPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	leftPad.myName = "leftPad"
+
 
 	-- left pad draggable
 	function leftPad:touch( event )
 
 	    if event.phase == "began" then
 	        self.markY = self.y
+	        leftPadShadow.markY = leftPadShadow.y
 
 	    elseif event.phase == "moved" then
 	    	if(self.markY ~= nil) then
 		        local y = (event.y - event.yStart) + self.markY
 		        self.y = y
+		        leftPadShadow.y = y
 		    end
 	    end
 	    return true
 
 	end
+
+
+	-- left pad shadow draggable
+	function leftPadShadow:touch( event )
+
+	    if event.phase == "began" then
+	        self.markY = self.y
+	        leftPad.markY = leftPadShadow.y
+
+	    elseif event.phase == "moved" then
+	    	if(self.markY ~= nil) then
+		        local y = (event.y - event.yStart) + self.markY
+		        self.y = y
+		        leftPad.y = y
+		    end
+	    end
+	    return true
+
+	end
+
 
 	-- draw scoreboard
 	score = display.newText( sceneGroup, "0", 470, 30, native.systemFont, 20 )
@@ -205,6 +234,7 @@ function scene:show( event )
 		leftPad:addEventListener( "collision", onCollisionLeftPad )
 		rightPad:addEventListener( "collision", onCollisionRightPad )
 		leftWall:addEventListener( "collision", onCollisionLeftWall )
+		leftPadShadow:addEventListener( "touch", leftPadShadow 	)
     end
 end
  
