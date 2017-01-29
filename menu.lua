@@ -4,6 +4,7 @@ local scene = composer.newScene()
 
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
+local highScore = nil
 
 local function gotoGame()
 	composer.gotoScene( "game" )
@@ -26,7 +27,7 @@ function scene:create( event )
     local gameName = display.newText(sceneGroup, "Pong", halfW, halfH-50, native.systemFont, 100)
     gameName:setFillColor( 0.66, 0.99, .52 )
 
-    local highScore = display.newText( sceneGroup, "High score:", display.contentCenterX+190, halfH-140, native.systemFont, 15 )
+    highScore = display.newText( sceneGroup, "High score:", display.contentCenterX+190, halfH-140, native.systemFont, 15 )
     local pointsEarned = display.newText( sceneGroup, "Points earned:", display.contentCenterX+190, halfH-120, native.systemFont, 15 )
 
     local playButton = display.newText( sceneGroup, "Play", display.contentCenterX, 200, native.systemFont, 44 )
@@ -49,6 +50,12 @@ function scene:show( event )
 
 	if ( phase == "will" ) then
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
+		local score = composer.getVariable( "score" )
+
+		if ( score ~= nil) then
+			print ("score is: " .. score)
+			highScore.text = ("High score: " ..  score)
+		end
 
 	elseif ( phase == "did" ) then
 		-- Code here runs when the scene is entirely on screen

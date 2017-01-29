@@ -88,6 +88,7 @@ local function onCollisionLeftPad( event )
 
 	if (event.phase == "began") then
 		score.text = score.text + 1
+		composer.setVariable( "score", score.text )
 	end
 
 	if (event.phase == "ended") then
