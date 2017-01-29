@@ -39,7 +39,7 @@ end
 
 
 -- function that create/draw the ball
-function createBall(sceneGroup)
+function createBall( sceneGroup )
 
 	local ballName = display.newCircle(sceneGroup, halfW, halfH, 10)
 	return ballName
@@ -58,7 +58,7 @@ end
 
 
 -- collision to ball
-local function onCollisionBall(event)
+local function onCollisionBall( event )
 
 	-- update the score
 	if (event.phase == "ended") then
@@ -69,7 +69,7 @@ end
 
 
 -- collision left pad
-local function onCollisionLeftPad(event)
+local function onCollisionLeftPad( event )
 
 	if (event.phase == "began") then
 		score.text = score.text + 1
@@ -87,7 +87,7 @@ end
 
 
 -- collision right pad
-local function onCollisionRightPad(event)
+local function onCollisionRightPad( event )
 
 	if (event.phase == "ended") then
 		-- add speed to the ball
@@ -101,11 +101,22 @@ end
 
 
 -- collision left wall
-local function onCollisionLeftWall(event)
+local function onCollisionLeftWall( event )
 
 	if (event.phase == "ended") then
 		composer.gotoScene( "menu" )
 	end
+
+end
+
+
+local function checkPadsLimits( event )
+
+	if (leftPad.y <= 45) then leftPad.y = 45 leftPadShadow.y = 45 end
+	if (leftPad.y >= 275) then leftPad.y = 275 leftPadShadow.y = 275 end
+
+	if (rightPad.y <= 45) then rightPad.y = 45 end
+	if (rightPad.y >= 275) then rightPad.y = 275 end
 
 end
 
@@ -138,10 +149,9 @@ function scene:create( event )
 	physics.addBody(rightPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	rightPad.myName = "rightPad"
 
-	leftPadShadow = display.newRoundedRect( sceneGroup, 0, halfH, 200, 300, 5 )
+	leftPadShadow = display.newRoundedRect( sceneGroup, halfW, halfH, halfW*2 + 50, 300*2, 5 )
 	leftPadShadow:setFillColor(0, 0, 0)
 	leftPadShadow:toBack()
---	physics.addBody(leftPadShadow, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	leftPadShadow.myName = "leftPadShadow"
 
 	leftPad = createPads(sceneGroup, 0, halfH)
@@ -235,6 +245,7 @@ function scene:show( event )
 		rightPad:addEventListener( "collision", onCollisionRightPad )
 		leftWall:addEventListener( "collision", onCollisionLeftWall )
 		leftPadShadow:addEventListener( "touch", leftPadShadow 	)
+		Runtime:addEventListener( "enterFrame", checkPadsLimits )
     end
 end
  
@@ -258,6 +269,8 @@ function scene:hide( event )
         leftPad:removeEventListener( "collision", onCollisionLeftPad )
         rightPad:removeEventListener( "collision", onCollisionRightPad )
         leftWall:removeEventListener( "collision", onCollisionLeftWall )
+        leftPadShadow:addEventListener( "touch", leftPadShadow	)
+        Runtime:removeEventListener( "enterFrame", checkPadsLimits )
 
         -- this removes all the objects
         composer.removeScene( "game", true )
