@@ -28,7 +28,7 @@ function createPads(sceneGroup, x, y)
 	local padOptions = {
 		x = x,
 		y = y,
-		width = 15,
+		width = 70,
 		height = 80,
 		cornerRadius = 5
 	}
