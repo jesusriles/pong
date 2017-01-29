@@ -68,6 +68,21 @@ local function onCollisionBall( event )
 end
 
 
+local function incrementSpeed( )
+
+	if (speed <= 500) then 
+		speed = speed + 10 
+	elseif (speed > 500 and speed <= 650) then
+		speed = speed + 5
+	else
+		speed = speed + 3
+	end
+
+	speedText.text = speed
+	return speed
+
+end
+
 -- collision left pad
 local function onCollisionLeftPad( event )
 
@@ -76,11 +91,7 @@ local function onCollisionLeftPad( event )
 	end
 
 	if (event.phase == "ended") then
-		-- add speed to the ball	
-		speed = speed + 10
-
-		ball:setLinearVelocity( speed, math.random( -350, 350 ) )
-		print("onCollisionLeftPad> speed: " .. speed)
+		ball:setLinearVelocity( incrementSpeed(), math.random( -350, 350 ) )
 	end
 
 end
@@ -90,21 +101,30 @@ end
 local function onCollisionRightPad( event )
 
 	if (event.phase == "ended") then
-		-- add speed to the ball
-		speed = speed + 10
-
-		ball:setLinearVelocity( (speed * -1 ), math.random( -350, 350 ) )
-		print("onCollisionRightPad> speed: " .. speed)
+		ball:setLinearVelocity( (incrementSpeed() * -1 ), math.random( -350, 350 ) )
 	end
 
+end
+
+
+local function goToMenu()
+	composer.gotoScene( "menu" )
+end
+
+
+local function endTheGame()
+
+	-- stop the ball and go back to menu
+	ball:setLinearVelocity( 0, 0 )
+	timer.performWithDelay( 1000, goToMenu )
 end
 
 
 -- collision left wall
 local function onCollisionLeftWall( event )
 
-	if (event.phase == "ended") then
-		composer.gotoScene( "menu" )
+	if (event.phase == "began") then
+		endTheGame()		
 	end
 
 end
@@ -139,7 +159,7 @@ function scene:create( event )
 	-- draw ball
 	ball = createBall(sceneGroup)
 	ball:setFillColor(180/255, 130/255, 195/255)
-	physics.addBody(ball, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
+	physics.addBody(ball, "dynamic", {density = 1.0, friction = 0, bounce = 1, isSensor = false, radius = 15})
 	ball:applyForce(200, 50)
 	ball.myName = "ball"
 
@@ -200,6 +220,7 @@ function scene:create( event )
 
 	-- draw scoreboard
 	score = display.newText( sceneGroup, "0", 470, 30, native.systemFont, 20 )
+	speedText = display.newText( sceneGroup, speed, 470, 50, native.systemFont, 20 )
 	score:setFillColor(1, 1, 1)
 
 	-- create wall objects
@@ -246,6 +267,7 @@ function scene:show( event )
 		leftWall:addEventListener( "collision", onCollisionLeftWall )
 		leftPadShadow:addEventListener( "touch", leftPadShadow 	)
 		Runtime:addEventListener( "enterFrame", checkPadsLimits )
+
     end
 end
  
