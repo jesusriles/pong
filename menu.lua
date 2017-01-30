@@ -4,14 +4,75 @@ local scene = composer.newScene()
 
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
+local highScore = nil
+
+
+-- persistent data
+local PersistentData = {}
+PersistentData.fileName = "scorefile.txt"
+
 
 local function gotoGame()
 	composer.gotoScene( "game" )
 end
 
+
 local function gotoEnhancements()
 	composer.gotoScene( "enhancements" )
 end
+
+
+-- function related to persistence
+function PersistentData.setScore( score )
+	PersistentData.score = score
+	PersistentData.save()
+end
+
+
+function PersistentData.getScore()
+	return PersistentData.load()
+end
+
+
+function PersistentData.save()
+	
+	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
+	local file = io.open(path, "w")
+
+	if ( file ) then
+		local contents = tostring( PersistentData.score )
+		file:write( contents )
+		io.close( file )
+		print("File saved correctly.")
+		return true
+	else
+		print( "Error: could not read ", PersistentData.fileName, "." )
+		return false
+	end
+
+end
+
+
+function PersistentData.load()
+
+	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
+	print("Path is:" .. path)
+	local contents = nil
+	local file = io.open( path, "r" )
+
+	if ( file ) then
+		local contents = file:read( "*a" )
+		local score = tonumber(contents);
+		io.close( file )
+		print( "File loaded correctly" )
+		return score
+	else
+		print( "Error: could not read scores from ", PersistentData.fileName, "." )
+	end
+	return nil
+
+end
+
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -26,7 +87,7 @@ function scene:create( event )
     local gameName = display.newText(sceneGroup, "Pong", halfW, halfH-50, native.systemFont, 100)
     gameName:setFillColor( 0.66, 0.99, .52 )
 
-    local highScore = display.newText( sceneGroup, "High score:", display.contentCenterX+190, halfH-140, native.systemFont, 15 )
+    highScore = display.newText( sceneGroup, "High score:", display.contentCenterX+190, halfH-140, native.systemFont, 15 )
     local pointsEarned = display.newText( sceneGroup, "Points earned:", display.contentCenterX+190, halfH-120, native.systemFont, 15 )
 
     local playButton = display.newText( sceneGroup, "Play", display.contentCenterX, 200, native.systemFont, 44 )
@@ -50,10 +111,19 @@ function scene:show( event )
 	if ( phase == "will" ) then
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
 
+		local score = PersistentData.getScore()
+		if ( score ~= nil ) then 
+			print( "High score: " .. PersistentData.getScore() )
+			highScore.text = ( "High score: " .. PersistentData.getScore() )
+		else
+			PersistentData.setScore(0)
+			highScore.text = ( "High score: " .. 0 )
+		end
+
 	elseif ( phase == "did" ) then
 		-- Code here runs when the scene is entirely on screen
-
 	end
+
 end
 
 

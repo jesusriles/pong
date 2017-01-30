@@ -16,10 +16,14 @@ local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
 
 local speed = 250
-local score = nil
+local score = 0
 local ball = nil
 local leftPad, rightPad = nil, nil
 local bottomWall, leftWall, topWall, rightWall = nil, nil, nil, nil
+
+-- persistent data
+local PersistentData = {}
+PersistentData.fileName = "scorefile.txt"
 
 
 -- function that create/draw the pads
@@ -57,16 +61,22 @@ function moveRightPad( object )
 end
 
 
--- collision to ball
-local function onCollisionBall( event )
+local function incrementSpeed( )
 
-	-- update the score
-	if (event.phase == "ended") then
-		--score.text = score.text + 1
+	if (speed <= 400) then 
+		speed = speed + 10 
+	elseif (speed > 400 and speed <= 550) then
+		speed = speed + 5
+	elseif (speed > 550 and speed <= 650) then
+		speed = speed + 3
+	else
+		speed = speed + 1
 	end
 
-end
+	speedText.text = speed
+	return speed
 
+end
 
 -- collision left pad
 local function onCollisionLeftPad( event )
@@ -76,11 +86,7 @@ local function onCollisionLeftPad( event )
 	end
 
 	if (event.phase == "ended") then
-		-- add speed to the ball	
-		speed = speed + 10
-
-		ball:setLinearVelocity( speed, math.random( -350, 350 ) )
-		print("onCollisionLeftPad> speed: " .. speed)
+		ball:setLinearVelocity( incrementSpeed(), math.random( -350, 350 ) )
 	end
 
 end
@@ -90,12 +96,27 @@ end
 local function onCollisionRightPad( event )
 
 	if (event.phase == "ended") then
-		-- add speed to the ball
-		speed = speed + 10
-
-		ball:setLinearVelocity( (speed * -1 ), math.random( -350, 350 ) )
-		print("onCollisionRightPad> speed: " .. speed)
+		ball:setLinearVelocity( (incrementSpeed() * -1 ), math.random( -350, 350 ) )
 	end
+
+end
+
+
+local function goToMenu()
+	composer.gotoScene( "menu" )
+end
+
+
+local function endTheGame()
+
+	-- stop the ball
+	ball:setLinearVelocity( 0, 0 )
+
+	-- if high score is better, save it
+	if( tonumber(score.text) > PersistentData.getScore() ) then
+		PersistentData.setScore(score.text)
+	end
+	timer.performWithDelay( 1000, goToMenu )
 
 end
 
@@ -103,13 +124,14 @@ end
 -- collision left wall
 local function onCollisionLeftWall( event )
 
-	if (event.phase == "ended") then
-		composer.gotoScene( "menu" )
+	if (event.phase == "began") then
+		endTheGame()
 	end
 
 end
 
 
+-- limits for pads at top and bottom
 local function checkPadsLimits( event )
 
 	if (leftPad.y <= 45) then leftPad.y = 45 leftPadShadow.y = 45 end
@@ -117,6 +139,57 @@ local function checkPadsLimits( event )
 
 	if (rightPad.y <= 45) then rightPad.y = 45 end
 	if (rightPad.y >= 275) then rightPad.y = 275 end
+
+end
+
+
+-- function related to persistence
+function PersistentData.setScore( score )
+	PersistentData.score = score
+	PersistentData.save()
+end
+
+
+function PersistentData.getScore()
+	return PersistentData.load()
+end
+
+
+function PersistentData.save()
+	
+	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
+	local file = io.open(path, "w")
+
+	if ( file ) then
+		local contents = tostring( PersistentData.score )
+		file:write( contents )
+		io.close( file )
+		print("File saved correctly.")
+		return true
+	else
+		print( "Error: could not read ", PersistentData.fileName, "." )
+		return false
+	end
+
+end
+
+
+function PersistentData.load()
+
+	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
+	local contents = nil
+	local file = io.open( path, "r" )
+
+	if ( file ) then
+		local contents = file:read( "*a" )
+		local score = tonumber(contents);
+		io.close( file )
+		print( "File loaded correctly" )
+		return score
+	else
+		print( "Error: could not read scores from ", PersistentData.fileName, "." )
+	end
+	return nil
 
 end
 
@@ -139,7 +212,7 @@ function scene:create( event )
 	-- draw ball
 	ball = createBall(sceneGroup)
 	ball:setFillColor(180/255, 130/255, 195/255)
-	physics.addBody(ball, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
+	physics.addBody(ball, "dynamic", {density = 1.0, friction = 0, bounce = 1, isSensor = false, radius = 15})
 	ball:applyForce(200, 50)
 	ball.myName = "ball"
 
@@ -200,6 +273,7 @@ function scene:create( event )
 
 	-- draw scoreboard
 	score = display.newText( sceneGroup, "0", 470, 30, native.systemFont, 20 )
+	speedText = display.newText( sceneGroup, speed, 470, 50, native.systemFont, 20 )
 	score:setFillColor(1, 1, 1)
 
 	-- create wall objects
@@ -214,7 +288,6 @@ function scene:create( event )
 
 	rightWall = display.newRect( sceneGroup, display.contentWidth + 40, halfH, 10, display.contentHeight )
 	rightWall:setFillColor(100/255,50/255,100/255)
-
 
 	-- make them physics bodies
 	physics.addBody(topWall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
@@ -234,11 +307,10 @@ function scene:show( event )
     if ( phase == "will" ) then
         score.text = 0
         speed = 250
-
         physics.setGravity( 0, 0 )
  
     elseif ( phase == "did" ) then
-       	ball:addEventListener("collision", onCollisionBall)
+--       	ball:addEventListener("collision", onCollisionBall)
 		leftPad:addEventListener( "touch", leftPad )
 		Runtime:addEventListener( "enterFrame", moveRightPad )
 		leftPad:addEventListener( "collision", onCollisionLeftPad )
@@ -247,6 +319,7 @@ function scene:show( event )
 		leftPadShadow:addEventListener( "touch", leftPadShadow 	)
 		Runtime:addEventListener( "enterFrame", checkPadsLimits )
     end
+
 end
  
  
@@ -263,7 +336,7 @@ function scene:hide( event )
         -- Code here runs immediately after the scene goes entirely off screen
 
         -- remove listeners
-        ball:removeEventListener( "collision", onCollisionBall ) 
+--        ball:removeEventListener( "collision", onCollisionBall ) 
         leftPad:removeEventListener( "touch",  leftPad)
         Runtime:removeEventListener( "enterFrame", moveRightPad )
         leftPad:removeEventListener( "collision", onCollisionLeftPad )
