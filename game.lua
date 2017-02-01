@@ -1,4 +1,6 @@
 local composer = require( "composer" )
+local PersistentData = require ( "persistence" )
+
  
 local scene = composer.newScene()
  
@@ -20,10 +22,6 @@ local score = 0
 local ball = nil
 local leftPad, rightPad = nil, nil
 local bottomWall, leftWall, topWall, rightWall = nil, nil, nil, nil
-
--- persistent data
-local PersistentData = {}
-PersistentData.fileName = "scorefile.txt"
 
 
 -- function that create/draw the pads
@@ -139,57 +137,6 @@ local function checkPadsLimits( event )
 
 	if (rightPad.y <= 45) then rightPad.y = 45 end
 	if (rightPad.y >= 275) then rightPad.y = 275 end
-
-end
-
-
--- function related to persistence
-function PersistentData.setScore( score )
-	PersistentData.score = score
-	PersistentData.save()
-end
-
-
-function PersistentData.getScore()
-	return PersistentData.load()
-end
-
-
-function PersistentData.save()
-	
-	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
-	local file = io.open(path, "w")
-
-	if ( file ) then
-		local contents = tostring( PersistentData.score )
-		file:write( contents )
-		io.close( file )
-		print("File saved correctly.")
-		return true
-	else
-		print( "Error: could not read ", PersistentData.fileName, "." )
-		return false
-	end
-
-end
-
-
-function PersistentData.load()
-
-	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
-	local contents = nil
-	local file = io.open( path, "r" )
-
-	if ( file ) then
-		local contents = file:read( "*a" )
-		local score = tonumber(contents);
-		io.close( file )
-		print( "File loaded correctly" )
-		return score
-	else
-		print( "Error: could not read scores from ", PersistentData.fileName, "." )
-	end
-	return nil
 
 end
 
