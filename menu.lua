@@ -1,15 +1,11 @@
 local composer = require( "composer" )
+local PersistentData = require ( "persistence" )
 
 local scene = composer.newScene()
 
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
 local highScore = nil
-
-
--- persistent data
-local PersistentData = {}
-PersistentData.fileName = "scorefile.txt"
 
 
 local function gotoGame()
@@ -19,58 +15,6 @@ end
 
 local function gotoEnhancements()
 	composer.gotoScene( "enhancements" )
-end
-
-
--- function related to persistence
-function PersistentData.setScore( score )
-	PersistentData.score = score
-	PersistentData.save()
-end
-
-
-function PersistentData.getScore()
-	return PersistentData.load()
-end
-
-
-function PersistentData.save()
-	
-	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
-	local file = io.open(path, "w")
-
-	if ( file ) then
-		local contents = tostring( PersistentData.score )
-		file:write( contents )
-		io.close( file )
-		print("File saved correctly.")
-		return true
-	else
-		print( "Error: could not read ", PersistentData.fileName, "." )
-		return false
-	end
-
-end
-
-
-function PersistentData.load()
-
-	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
-	print("Path is:" .. path)
-	local contents = nil
-	local file = io.open( path, "r" )
-
-	if ( file ) then
-		local contents = file:read( "*a" )
-		local score = tonumber(contents);
-		io.close( file )
-		print( "File loaded correctly" )
-		return score
-	else
-		print( "Error: could not read scores from ", PersistentData.fileName, "." )
-	end
-	return nil
-
 end
 
 
