@@ -1,5 +1,6 @@
 local composer = require( "composer" )
 local PersistentData = require ( "persistence" )
+PersistentData.load()
 
 local scene = composer.newScene()
 
@@ -52,13 +53,13 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 
+
 	if ( phase == "will" ) then
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
+		local score = PersistentData.score
 
-		local score = PersistentData.getScore()
 		if ( score ~= nil ) then 
-			print( "High score: " .. PersistentData.getScore() )
-			highScore.text = ( "High score: " .. PersistentData.getScore() )
+			highScore.text = ( "High score: " .. score )
 		else
 			PersistentData.setScore(0)
 			highScore.text = ( "High score: " .. 0 )

@@ -1,7 +1,6 @@
 local composer = require( "composer" )
 local PersistentData = require ( "persistence" )
 
- 
 local scene = composer.newScene()
  
 -- -----------------------------------------------------------------------------------
@@ -111,7 +110,9 @@ local function endTheGame()
 	ball:setLinearVelocity( 0, 0 )
 
 	-- if high score is better, save it
-	if( tonumber(score.text) > PersistentData.getScore() ) then
+	local oldScore = PersistentData.getScore()
+
+	if( tonumber(score.text) > tonumber(oldScore) ) then
 		PersistentData.setScore(score.text)
 	end
 	timer.performWithDelay( 1000, goToMenu )

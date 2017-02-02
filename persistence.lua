@@ -1,26 +1,44 @@
--- variables
+local json = require "json"
+
+
 local PersistentData = {}
+
+-- variables
 PersistentData.fileName = "scorefile.txt"
+PersistentData.score = nil
+PersistentData.money = nil
+
+-- functions
+PersistentData.setScore = nil
+PersistentData.getScore = nil
+PersistentData.save = nil
+PersistentData.load = nil
 
 
-function PersistentData.setScore( score )
+-- set the score
+PersistentData.setScore = function( score )
+
 	PersistentData.score = score
 	PersistentData.save()
+
 end
 
+-- get the score
+PersistentData.getScore = function()
 
-function PersistentData.getScore()
-	return PersistentData.load()
+	return PersistentData.score
+
 end
 
-
-function PersistentData.save()
+-- write the data to a file
+PersistentData.save = function()
 	
 	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
 	local file = io.open(path, "w")
 
 	if ( file ) then
-		local contents = tostring( PersistentData.score )
+
+		local contents = json.encode( PersistentData )
 		file:write( contents )
 		io.close( file )
 		print("File saved correctly.")
@@ -31,9 +49,10 @@ function PersistentData.save()
 	end
 
 end
+	
 
-
-function PersistentData.load()
+-- read the data from a file
+PersistentData.load = function()
 
 	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
 	local contents = nil
@@ -41,14 +60,16 @@ function PersistentData.load()
 
 	if ( file ) then
 		local contents = file:read( "*a" )
-		local score = tonumber(contents);
+		local contentsDecoded = json.decode( contents )
 		io.close( file )
 		print( "File loaded correctly" )
-		return score
+
+		PersistentData.score = contentsDecoded.score
 	else
 		print( "Error: could not read scores from ", PersistentData.fileName, "." )
+		return false
 	end
-	return nil
+	return true
 
 end
 
