@@ -1,3 +1,9 @@
+--[[ 
+
+Everything related to storing the data in disk must be here.
+
+]]
+
 local json = require "json"
 
 local PersistentData = {}
@@ -6,6 +12,7 @@ local PersistentData = {}
 PersistentData.fileName = "scorefile.txt"
 PersistentData.score = nil
 PersistentData.money = nil
+PersistentData.speed = nil
 
 -- functions
 PersistentData.setScore = nil

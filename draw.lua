@@ -1,3 +1,10 @@
+--[[ 
+
+Everything that you see in the screen must be created here.
+All objects must have myName declared
+
+]]
+
 local physics = require("physics")
 local Draw = {}
 
@@ -76,6 +83,7 @@ function Draw.score( scene )
 
 	local score = display.newText( scene, "0", 470, 30, native.systemFont, 20 )
 	score:setFillColor(1, 1, 1)
+	score.myName = "score"
 	return score
 
 end
@@ -86,6 +94,7 @@ function Draw.topWall( scene )
 	local wall = display.newRect( scene, halfW, 0, display.contentWidth + 60, 10 )
 	physics.addBody(wall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	wall:setFillColor(0,0,0)
+	wall.myName = "topwall"
 	return wall
 
 end
@@ -96,6 +105,7 @@ function Draw.bottomWall( scene )
 	local wall = display.newRect( scene, halfW, screenH, display.contentWidth + 60, 10 )
 	physics.addBody(wall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	wall:setFillColor(0,0,0)
+	wall.myName = "bottomWall"
 	return wall
 
 end
@@ -106,6 +116,7 @@ function Draw.leftWall( scene )
 	local wall = display.newRect( scene, -40, halfH, 10, display.contentHeight )
 	physics.addBody(wall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	wall:setFillColor(.5,.5,.5)
+	wall.myName = "leftWall"
 	return wall
 
 end
@@ -116,7 +127,45 @@ function Draw.rightWall( scene )
 	local wall = display.newRect( scene, display.contentWidth + 40, halfH, 10, display.contentHeight )
 	physics.addBody(wall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
 	wall:setFillColor(100/255,50/255,100/255)
+	wall.myName = "rightWall"
 	return wall
+
+end
+
+-- draw the speed value
+function Draw.speedInScreen( scene )
+	local speed = 250
+	local text = display.newText( scene, speed, 470, 50, native.systemFont, 20 )
+	text.myName = "textInScreen"
+	return text
+end
+
+
+-- draw the coin
+function Draw.coin()
+	-- draw the coin
+	local coin = display.newImage( "coin.png", halfW, -50 )
+	local scale = .15
+	coin:scale( scale, scale )
+	coin.myName = "coin"
+
+	-- add physics
+	physics.addBody(coin, "dynamic", {density = 0.0, friction = 0, bounce = 0, isSensor = false, radius = 15})
+	return coin
+
+end
+
+-- draw the diamond
+function Draw.diamond()
+	-- draw the diamond
+	local diamond = display.newImage( "diamond.png", halfW, -50 )
+	local scale = .15
+	diamond:scale( scale, scale )
+	diamond.myName = "diamond"
+
+	-- add physics
+	--physics.addBody(diamond, "dynamic", {density = 0.0, friction = 0, bounce = 0, isSensor = false, radius = 15})
+	return diamond
 
 end
 
