@@ -1,12 +1,8 @@
 local composer = require( "composer" )
-local PersistentData = require ( "persistence" )
+local PersistentData = require( "persistence" )
+local Draw = require( "draw" )
 
 local scene = composer.newScene()
- 
--- -----------------------------------------------------------------------------------
--- Code outside of the scene event functions below will only be executed ONCE unless
--- the scene is removed entirely (not recycled) via "composer.removeScene()"
--- -----------------------------------------------------------------------------------
  
 local physics = require("physics")
 
@@ -16,39 +12,19 @@ local screenH = display.contentHeight
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
 
-local speed = 250
-local score = 0
+local speed = 250 
+local score = nil -- times the left pad touch the ball
+local points = nil -- diamonds
+
 local ball = nil
 local leftPad, rightPad = nil, nil
 local bottomWall, leftWall, topWall, rightWall = nil, nil, nil, nil
 
-
--- function that create/draw the pads
-function createPads(sceneGroup, x, y)
-
-	local padOptions = {
-		x = x,
-		y = y,
-		width = 15,
-		height = 80,
-		cornerRadius = 5
-	}
-	local padName = display.newRoundedRect( sceneGroup, x, y, padOptions.width, padOptions.height, padOptions.cornerRadius )
-	return padName
-
-end
+local leftPadShadow = nil
+local speedInScreen = nil
 
 
--- function that create/draw the ball
-function createBall( sceneGroup )
-
-	local ballName = display.newCircle(sceneGroup, halfW, halfH, 10)
-	return ballName
-
-end
-
-
--- function that move the right pad
+-- function that moves the right pad
 function moveRightPad( object )
 
 	if (ball ~= nil) then
@@ -57,7 +33,7 @@ function moveRightPad( object )
 
 end
 
-
+-- funciton that increments the speed of the ball
 local function incrementSpeed( )
 
 	if (speed <= 400) then 
@@ -70,34 +46,10 @@ local function incrementSpeed( )
 		speed = speed + 1
 	end
 
-	speedText.text = speed
+	speedInScreen.text = speed
 	return speed
 
 end
-
--- collision left pad
-local function onCollisionLeftPad( event )
-
-	if (event.phase == "began") then
-		score.text = score.text + 1
-	end
-
-	if (event.phase == "ended") then
-		ball:setLinearVelocity( incrementSpeed(), math.random( -350, 350 ) )
-	end
-
-end
-
-
--- collision right pad
-local function onCollisionRightPad( event )
-
-	if (event.phase == "ended") then
-		ball:setLinearVelocity( (incrementSpeed() * -1 ), math.random( -350, 350 ) )
-	end
-
-end
-
 
 local function goToMenu()
 	composer.gotoScene( "menu" )
@@ -109,25 +61,122 @@ local function endTheGame()
 	-- stop the ball
 	ball:setLinearVelocity( 0, 0 )
 
+	local save = false
+
 	-- if high score is better, save it
 	local oldScore = PersistentData.getScore()
 
 	if( tonumber(score.text) > tonumber(oldScore) ) then
-		PersistentData.setScore(score.text)
+		PersistentData.setScore( tonumber(score.text) )
+		save = true
+	else
+		PersistentData.setScore = oldScore
 	end
+
+	-- if point is better, save it
+	local oldPoints = PersistentData.getPoints()
+
+	if( tonumber(points.text) > tonumber(oldPoints)) then
+		PersistentData.setPoints( points.text )
+		save = true
+	else
+		PersistentData.setPoints = oldPoints
+	end
+
+	-- save the game
+	if( save ) then PersistentData.save() end
+	save = false
+
 	timer.performWithDelay( 1000, goToMenu )
 
 end
 
+-- ball collision
+local  function onCollisionBall( event )
 
--- collision left wall
-local function onCollisionLeftWall( event )
+	if( event.phase =="began") then
+		-- collision with the left wall
+		if( event.other.myName == "leftWall" ) then
+			endTheGame()
+		end
 
-	if (event.phase == "began") then
-		endTheGame()
-	end
+		-- collision with the left pad
+		if( event.other.myName == "leftPad" ) then
+			score.text = score.text + 1
+			ball:setLinearVelocity( incrementSpeed(), math.random( -350, 350 ) )
+		end
+
+		-- collision with the right pad
+		if( event.other.myName == "rightPad" ) then
+			ball:setLinearVelocity( (incrementSpeed() * -1 ), math.random( -350, 350 ) )
+		end
+
+		-- collision with coin
+		if( event.other.myName == "coin") then
+			display.remove( event.other )
+			event.other = nil
+
+			points.text = points.text + .5
+		end
+	end	
 
 end
+
+-- remove coin
+local function removeCoin( event )
+
+	display.remove( event )
+	event = nil
+
+end
+
+-- remove diamond when touched
+local function onTouchDiamond( event )
+
+	display.remove( event.target )
+	event = nil
+
+	points.text = points.text + 1
+
+end
+
+-- remove diamond
+local function removeDiamond( event )
+
+	display.remove( event )
+	event = nil
+
+end 
+
+-- add coins randomly
+local function dropItem( event )
+
+	local chose = math.random(0, 1)
+
+	-- spam a coin
+	if( chose == 0 ) then 
+		local coin = Draw.coin()
+		coin.x = math.random( 40, screenW-40 )
+		coin.y = -50
+
+		local coinOptions = {
+			time = ( math.random( 1000, 10000 )),
+			y = ( screenH + 50 ),
+			x = ( math.random( 40, screenW-40 )),
+			onComplete = removeCoin
+		}
+		transition.to(coin, coinOptions)
+	end
+
+	-- spam a diamond
+	local diamond = Draw.diamond()
+	diamond.x = math.random( 40, screenW-40 )
+	diamond.y = math.random( 40, screenH-40 )
+	transition.fadeOut( diamond, { delay=1000, time=2000, onComplete = removeDiamond })
+	diamond:addEventListener( "touch", onTouchDiamond )
+
+end
+
 
 
 -- limits for pads at top and bottom
@@ -158,28 +207,11 @@ function scene:create( event )
 	display.setDefault( sceneGroup, "background", 0, 0, 0 )
 
 	-- draw ball
-	ball = createBall(sceneGroup)
-	ball:setFillColor(180/255, 130/255, 195/255)
-	physics.addBody(ball, "dynamic", {density = 1.0, friction = 0, bounce = 1, isSensor = false, radius = 15})
-	ball:applyForce(200, 50)
-	ball.myName = "ball"
+	ball = Draw.createBall(sceneGroup)
 
-	-- draw pads
-	rightPad = createPads(sceneGroup, screenW, halfH)
-	rightPad:setFillColor(.2, .5, .6)
-	physics.addBody(rightPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
-	rightPad.myName = "rightPad"
-
-	leftPadShadow = display.newRoundedRect( sceneGroup, halfW, halfH, halfW*2 + 50, 300*2, 5 )
-	leftPadShadow:setFillColor(0, 0, 0)
-	leftPadShadow:toBack()
-	leftPadShadow.myName = "leftPadShadow"
-
-	leftPad = createPads(sceneGroup, 0, halfH)
-	leftPad:setFillColor(.6, .1, .2)
-	physics.addBody(leftPad, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
-	leftPad.myName = "leftPad"
-
+	rightPad = Draw.createRightPad( sceneGroup )
+	leftPadShadow = Draw.createLeftPadShadow( sceneGroup )
+	leftPad = Draw.createLeftPad( sceneGroup )
 
 	-- left pad draggable
 	function leftPad:touch( event )
@@ -199,7 +231,6 @@ function scene:create( event )
 
 	end
 
-
 	-- left pad shadow draggable
 	function leftPadShadow:touch( event )
 
@@ -218,33 +249,18 @@ function scene:create( event )
 
 	end
 
-
-	-- draw scoreboard
-	score = display.newText( sceneGroup, "0", 470, 30, native.systemFont, 20 )
-	speedText = display.newText( sceneGroup, speed, 470, 50, native.systemFont, 20 )
-	score:setFillColor(1, 1, 1)
+	-- text in screen
+	score = Draw.score( sceneGroup )
+	speedInScreen = Draw.speedInScreen( sceneGroup )
+	points = Draw.points( sceneGroup )
 
 	-- create wall objects
-	topWall = display.newRect( sceneGroup, halfW, 0, display.contentWidth + 60, 10 )
-	topWall:setFillColor(0,0,0)
-
-	bottomWall = display.newRect( sceneGroup, halfW, screenH, display.contentWidth + 60, 10 )
-	bottomWall:setFillColor(0,0,0)
-
-	leftWall = display.newRect( sceneGroup, -40, halfH, 10, display.contentHeight )
-	leftWall:setFillColor(.5,.5,.5)
-
-	rightWall = display.newRect( sceneGroup, display.contentWidth + 40, halfH, 10, display.contentHeight )
-	rightWall:setFillColor(100/255,50/255,100/255)
-
-	-- make them physics bodies
-	physics.addBody(topWall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
-	physics.addBody(bottomWall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
-	physics.addBody(leftWall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
-	physics.addBody(rightWall, "static", {density = 1.0, friction = 0, bounce = 1, isSensor = false})
+	topWall = Draw.topWall( sceneGroup )
+	bottomWall = Draw.bottomWall( sceneGroup )
+	leftWall = Draw.leftWall( sceneGroup )
+	rightWall = Draw.rightWall( sceneGroup )
 
 end
- 
  
 -- show()
 function scene:show( event )
@@ -256,22 +272,22 @@ function scene:show( event )
         score.text = 0
         speed = 250
         physics.setGravity( 0, 0 )
+        points.text = PersistentData.getPoints()
  
     elseif ( phase == "did" ) then
---       	ball:addEventListener("collision", onCollisionBall)
+       	ball:addEventListener("collision", onCollisionBall )
 		leftPad:addEventListener( "touch", leftPad )
-		Runtime:addEventListener( "enterFrame", moveRightPad )
-		leftPad:addEventListener( "collision", onCollisionLeftPad )
-		rightPad:addEventListener( "collision", onCollisionRightPad )
-		leftWall:addEventListener( "collision", onCollisionLeftWall )
 		leftPadShadow:addEventListener( "touch", leftPadShadow 	)
+
+		Runtime:addEventListener( "enterFrame", moveRightPad )
 		Runtime:addEventListener( "enterFrame", checkPadsLimits )
+
+		dropItemTimer = timer.performWithDelay( 5000, dropItem, -1 )
     end
 
 end
  
- 
--- hide()
+ -- hide()
 function scene:hide( event )
  
     local sceneGroup = self.view
@@ -284,14 +300,14 @@ function scene:hide( event )
         -- Code here runs immediately after the scene goes entirely off screen
 
         -- remove listeners
---        ball:removeEventListener( "collision", onCollisionBall ) 
-        leftPad:removeEventListener( "touch",  leftPad)
-        Runtime:removeEventListener( "enterFrame", moveRightPad )
-        leftPad:removeEventListener( "collision", onCollisionLeftPad )
-        rightPad:removeEventListener( "collision", onCollisionRightPad )
-        leftWall:removeEventListener( "collision", onCollisionLeftWall )
+        ball:removeEventListener( "collision", onCollisionBall ) 
+        leftPad:removeEventListener( "touch",  leftPad )
         leftPadShadow:addEventListener( "touch", leftPadShadow	)
+
+        Runtime:removeEventListener( "enterFrame", moveRightPad )
         Runtime:removeEventListener( "enterFrame", checkPadsLimits )
+
+        timer.cancel(dropItemTimer)
 
         -- this removes all the objects
         composer.removeScene( "game", true )

@@ -7,6 +7,7 @@ local scene = composer.newScene()
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
 local highScore = nil
+local pointsEarned = nil
 
 
 local function gotoGame()
@@ -28,12 +29,16 @@ function scene:create( event )
 
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+
+    -- set background
     display.setDefault(sceneGroup, "background", 0, 0, 0 )
+
+    -- add all the text in the screen 
     local gameName = display.newText(sceneGroup, "Pong", halfW, halfH-50, native.systemFont, 100)
     gameName:setFillColor( 0.66, 0.99, .52 )
 
     highScore = display.newText( sceneGroup, "High score:", display.contentCenterX+190, halfH-140, native.systemFont, 15 )
-    local pointsEarned = display.newText( sceneGroup, "Points earned:", display.contentCenterX+190, halfH-120, native.systemFont, 15 )
+    pointsEarned = display.newText( sceneGroup, "Points:", display.contentCenterX+190, halfH-120, native.systemFont, 15 )
 
     local playButton = display.newText( sceneGroup, "Play", display.contentCenterX, 200, native.systemFont, 44 )
     playButton:setFillColor( 0.82, 0.86, 1 )
@@ -56,14 +61,26 @@ function scene:show( event )
 
 	if ( phase == "will" ) then
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
-		local score = PersistentData.score
 
-		if ( score ~= nil ) then 
+		-- load the score
+		local score = PersistentData.getScore()
+
+		if( score ~= nil ) then 
 			highScore.text = ( "High score: " .. score )
 		else
 			PersistentData.setScore(0)
 			highScore.text = ( "High score: " .. 0 )
 		end
+
+		-- load the points
+		local points = PersistentData.getPoints()
+
+		if( points ~= nil ) then
+			pointsEarned.text = ( "Points: " .. points )
+		else
+			pointsEarned.text = ( "Points: " .. 0)
+		end
+
 
 	elseif ( phase == "did" ) then
 		-- Code here runs when the scene is entirely on screen
