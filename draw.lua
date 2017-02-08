@@ -169,6 +169,14 @@ function Draw.diamond()
 
 end
 
+-- draw the points in the screen
+function Draw.points( scene )
+	local points = 0
+	local points = display.newText( scene, points, 470, 70, native.systemFont, 20 )
+	points.myName = "points"
+	return points
+end
+
 
 return Draw
 

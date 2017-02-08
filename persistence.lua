@@ -9,28 +9,55 @@ local json = require "json"
 local PersistentData = {}
 
 -- variables
-PersistentData.fileName = "scorefile.txt"
+PersistentData.fileName = "database.json"
 PersistentData.score = nil
-PersistentData.money = nil
-PersistentData.speed = nil
+PersistentData.score = nil
 
 -- functions
 PersistentData.setScore = nil
+PersistentData.setPoints = nil
 PersistentData.getScore = nil
+PersistentData.getPoints = nil
 PersistentData.save = nil
 PersistentData.load = nil
 
 
 -- set the score
 PersistentData.setScore = function( score )
-	PersistentData.score = score
-	PersistentData.save()
+
+	if( score ~= nil ) then
+		PersistentData.score = score
+	else
+		PersistentData.score = 0
+	end
+
+end
+
+-- set the points
+PersistentData.setPoints = function( points )
+
+	if( points ~= nil ) then 
+		PersistentData.points = points
+	else
+		PersistentData.points = 0
+	end
+
 end
 
 -- get the score
 PersistentData.getScore = function()
-	if( PersistentData.score == nil) then return 0 end
+
+	if( PersistentData.score == nil ) then return 0 end
 	return PersistentData.score
+
+end
+
+-- get the points
+PersistentData.getPoints = function()
+
+	if( PersistentData.points == nil ) then return 0 end
+	return PersistentData.points
+
 end
 
 -- write the data to a file
@@ -39,7 +66,7 @@ PersistentData.save = function()
 	local path = system.pathForFile( PersistentData.fileName, system.DocumentsDirectory )
 	local file = io.open(path, "w")
 
-	if ( file ) then
+	if( file ) then
 		local contents = json.encode( PersistentData )
 		file:write( contents )
 		io.close( file )
@@ -64,7 +91,11 @@ PersistentData.load = function()
 		io.close( file )
 		print( "File loaded correctly" )
 		local contentsDecoded = json.decode( contents )
+
+		-- information to load
 		PersistentData.score = contentsDecoded.score
+		PersistentData.points = contentsDecoded.points
+
 	else
 		print( "Error: could not read scores from ", PersistentData.fileName, "." )
 		return false

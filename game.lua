@@ -2,9 +2,6 @@ local composer = require( "composer" )
 local PersistentData = require( "persistence" )
 local Draw = require( "draw" )
 
--- Activate multitouch
-system.activate( "multitouch" )
-
 local scene = composer.newScene()
  
 local physics = require("physics")
@@ -15,8 +12,10 @@ local screenH = display.contentHeight
 local halfW = display.contentWidth * 0.5
 local halfH = display.contentHeight * 0.5
 
-local speed = 250
-local score = nil
+local speed = 250 
+local score = nil -- times the left pad touch the ball
+local points = nil -- diamonds
+
 local ball = nil
 local leftPad, rightPad = nil, nil
 local bottomWall, leftWall, topWall, rightWall = nil, nil, nil, nil
@@ -62,12 +61,32 @@ local function endTheGame()
 	-- stop the ball
 	ball:setLinearVelocity( 0, 0 )
 
+	local save = false
+
 	-- if high score is better, save it
 	local oldScore = PersistentData.getScore()
 
 	if( tonumber(score.text) > tonumber(oldScore) ) then
-		PersistentData.setScore(score.text)
+		PersistentData.setScore( tonumber(score.text) )
+		save = true
+	else
+		PersistentData.setScore = oldScore
 	end
+
+	-- if point is better, save it
+	local oldPoints = PersistentData.getPoints()
+
+	if( tonumber(points.text) > tonumber(oldPoints)) then
+		PersistentData.setPoints( points.text )
+		save = true
+	else
+		PersistentData.setPoints = oldPoints
+	end
+
+	-- save the game
+	if( save ) then PersistentData.save() end
+	save = false
+
 	timer.performWithDelay( 1000, goToMenu )
 
 end
@@ -96,6 +115,8 @@ local  function onCollisionBall( event )
 		if( event.other.myName == "coin") then
 			display.remove( event.other )
 			event.other = nil
+
+			points.text = points.text + .5
 		end
 	end	
 
@@ -103,7 +124,7 @@ end
 
 -- remove coin
 local function removeCoin( event )
-	
+
 	display.remove( event )
 	event = nil
 
@@ -112,12 +133,10 @@ end
 -- remove diamond when touched
 local function onTouchDiamond( event )
 
-	print(event)
-	for k, v in pairs(event) do
-		print (k, v)
-	end
 	display.remove( event.target )
 	event = nil
+
+	points.text = points.text + 1
 
 end
 
@@ -150,13 +169,11 @@ local function dropItem( event )
 	end
 
 	-- spam a diamond
-	if( chose == 1) then
-		local diamond = Draw.diamond()
-		diamond.x = math.random( 40, screenW-40 )
-		diamond.y = math.random( 40, screenH-40 )
-		transition.fadeOut( diamond, { delay=1000, time=2000, onComplete = removeDiamond })
-		diamond:addEventListener( "touch", onTouchDiamond )
-	end
+	local diamond = Draw.diamond()
+	diamond.x = math.random( 40, screenW-40 )
+	diamond.y = math.random( 40, screenH-40 )
+	transition.fadeOut( diamond, { delay=1000, time=2000, onComplete = removeDiamond })
+	diamond:addEventListener( "touch", onTouchDiamond )
 
 end
 
@@ -232,8 +249,10 @@ function scene:create( event )
 
 	end
 
+	-- text in screen
 	score = Draw.score( sceneGroup )
 	speedInScreen = Draw.speedInScreen( sceneGroup )
+	points = Draw.points( sceneGroup )
 
 	-- create wall objects
 	topWall = Draw.topWall( sceneGroup )
@@ -253,6 +272,7 @@ function scene:show( event )
         score.text = 0
         speed = 250
         physics.setGravity( 0, 0 )
+        points.text = PersistentData.getPoints()
  
     elseif ( phase == "did" ) then
        	ball:addEventListener("collision", onCollisionBall )
